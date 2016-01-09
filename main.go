@@ -6,10 +6,12 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -28,7 +30,11 @@ func main() {
 
 	files := crawlDir("mdb")
 
-	files = files[1:]
+	db, err := initSqlDb(*outputFile)
+	if err != nil {
+
+		log.Fatal("Could not initialise database: ", err)
+	}
 
 	for _, file := range files {
 
@@ -36,7 +42,7 @@ func main() {
 			continue
 		}
 
-		err := schema(file)
+		err := schema(file, db)
 
 		if err != nil {
 			log.Fatal(err)
@@ -49,10 +55,12 @@ func main() {
 func crawlDir(dirname string) []string {
 
 	files, err := ioutil.ReadDir(dirname)
-
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println("Read files from directory")
+
 	list := make([]string, len(files))
 
 	for _, f := range files {
@@ -65,23 +73,33 @@ func crawlDir(dirname string) []string {
 }
 
 // schema exports the mdb-schema in json format
-func schema(filename string) error {
+func schema(filename string, db *sql.DB) error {
 
-	var cmd *exec.Cmd
-	var err error
-
-	cmd = exec.Command("mdb-schema", filename)
-
-	err = cmd.Run()
-
+	out, err := exec.Command("mdb-schema", *dir+"/"+filename, "mysql").Output()
 	if err != nil {
-		log.Printf("Command finished with error: %v", err)
-		return err
-	} else {
 
-		log.Printf("Command executed successfully - File: %v", filename)
+		log.Fatal("Could not execute the command: ", err)
+
+		return err
 
 	}
+
+	queries := strings.Split(string(out), ";")
+
+	for _, query := range queries {
+
+		_, err := db.Exec(query)
+
+		if err != nil {
+			log.Fatalf("Could not execute the query transaction: %v", err)
+			return err
+
+		}
+
+	}
+
+	defer db.Close()
+
 	return err
 
 }
@@ -91,15 +109,19 @@ func initSqlDb(dbFile string) (*sql.DB, error) {
 
 	// ...
 
-	db, err := sql.Open("go-sqlite3", dbFile)
+	db, err := sql.Open("sqlite3", dbFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error opening the sqlite database file: ", err)
+		return nil, err
 	}
 
 	err = db.Ping()
 
 	if err != nil {
-		log.Fatal(err)
+
+		log.Fatal("Could not ping the database: ", err)
+		return nil, err
+
 	}
 
 	return db, nil
@@ -117,7 +139,7 @@ func dumpToSql(filename string) error {
 		return err
 	}
 
-	//
+	// TODO: Dump the data to the Sqlite DB file
 
 	return nil
 
