@@ -6,6 +6,7 @@ package main
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"os/exec"
 )
 
@@ -50,6 +51,40 @@ func schema(filename string) error {
 
 }
 
+//dump dumps data of the mdb returning slice of byte
+func dump(filename string) error {
+
+	var err error
+
+	err = prepareEnv()
+	if err != nil {
+
+		log.Fatal(err)
+		return err
+	}
+
+	//
+
+	return nil
+
+}
+
+// prepareEnv prepares the environment variables
+func prepareEnv() error {
+
+	var err error
+
+	err = os.Setenv("MDB_JET3_CHARSET", "cp1256")
+	if err != nil {
+		log.Fatal(err)
+		return err
+
+	}
+
+	return nil
+
+}
+
 func main() {
 
 	files := crawlDir("mdb")
@@ -67,7 +102,6 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
 	}
 
 }
