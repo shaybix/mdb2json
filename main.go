@@ -4,32 +4,54 @@
 package main
 
 import (
-	"fmt"
+	"io/ioutil"
 	"log"
 	"os/exec"
 )
 
-func main() {
-	filename := "mdb/file.bok"
+// CrawlDir crawls a directory and return a slice of filenames
+func crawlDir(dirname string) []string {
 
-	cmd := exec.Command("mdb-schema", filename)
-
-	output, err := cmd.CombinedOutput()
+	files, err := ioutil.ReadDir(dirname)
 
 	if err != nil {
 		log.Fatal(err)
 	}
+	list := make([]string, len(files))
 
-	fmt.Println(string(output))
+	for _, f := range files {
 
-	log.Printf("Waiting for command to finish....")
+		list = append(list, f.Name())
+	}
 
-	err = cmd.Run()
+	return list
 
-	if err != nil {
-		log.Printf("Command finished with error: %v", err)
-	} else {
-		log.Printf("Command executed successfully!")
+}
+
+func main() {
+
+	files := crawlDir("mdb")
+
+	files = files[1:]
+
+	var cmd *exec.Cmd
+
+	for _, file := range files {
+
+		if file == "" {
+			continue
+		}
+
+		cmd = exec.Command("mdb-schema", "mdb/"+string(file))
+
+		err := cmd.Run()
+
+		if err != nil {
+			log.Printf("Command finished with error: %v", err)
+		} else {
+			log.Printf("Command executed successfully! - File: %v", file)
+		}
+
 	}
 
 }
