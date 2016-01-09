@@ -1,0 +1,11 @@
+/data
+
+*.bok
+
+*.swp
+
+*.sql
+
+/mdb
+
+mdb2json
