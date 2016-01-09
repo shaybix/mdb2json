@@ -28,13 +28,33 @@ func crawlDir(dirname string) []string {
 
 }
 
+// schema exports the mdb-schema in json format
+func schema(filename string) error {
+
+	var cmd *exec.Cmd
+	var err error
+
+	cmd = exec.Command("mdb-schema", filename)
+
+	err = cmd.Run()
+
+	if err != nil {
+		log.Printf("Command finished with error: %v", err)
+		return err
+	} else {
+
+		log.Printf("Command executed successfully - File: %v", filename)
+
+	}
+	return err
+
+}
+
 func main() {
 
 	files := crawlDir("mdb")
 
 	files = files[1:]
-
-	var cmd *exec.Cmd
 
 	for _, file := range files {
 
@@ -42,14 +62,10 @@ func main() {
 			continue
 		}
 
-		cmd = exec.Command("mdb-schema", "mdb/"+string(file))
-
-		err := cmd.Run()
+		err := schema(file)
 
 		if err != nil {
-			log.Printf("Command finished with error: %v", err)
-		} else {
-			log.Printf("Command executed successfully! - File: %v", file)
+			log.Fatal(err)
 		}
 
 	}
