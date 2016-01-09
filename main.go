@@ -4,11 +4,46 @@
 package main
 
 import (
+	"database/sql"
+	"flag"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+
+	_ "github.com/mattn/go-sqlite3"
 )
+
+var format = flag.String("f", "json", "Choose either json or sql for format")
+var dir = flag.String("d", "mdb", "Select the directory with the bok files")
+var outputFile = flag.String("o", "db.sqlite", "Output file to dump your database content")
+
+func init() {
+
+	flag.Parse()
+
+}
+
+func main() {
+
+	files := crawlDir("mdb")
+
+	files = files[1:]
+
+	for _, file := range files {
+
+		if file == "" {
+			continue
+		}
+
+		err := schema(file)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+}
 
 // CrawlDir crawls a directory and return a slice of filenames
 func crawlDir(dirname string) []string {
@@ -51,8 +86,27 @@ func schema(filename string) error {
 
 }
 
-//dump dumps data of the mdb returning slice of byte
-func dump(filename string) error {
+// initSqlDb ...
+func initSqlDb(dbFile string) (*sql.DB, error) {
+
+	// ...
+
+	db, err := sql.Open("go-sqlite3", dbFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = db.Ping()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return db, nil
+}
+
+//dump dumps data into a Sql database and  returning an error
+func dumpToSql(filename string) error {
 
 	var err error
 
@@ -82,26 +136,5 @@ func prepareEnv() error {
 	}
 
 	return nil
-
-}
-
-func main() {
-
-	files := crawlDir("mdb")
-
-	files = files[1:]
-
-	for _, file := range files {
-
-		if file == "" {
-			continue
-		}
-
-		err := schema(file)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
 
 }
