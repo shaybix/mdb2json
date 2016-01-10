@@ -45,7 +45,7 @@ func main() {
 		err := schema(file, db)
 
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Not able to set schema: %v", err)
 		}
 	}
 
@@ -78,7 +78,7 @@ func schema(filename string, db *sql.DB) error {
 	out, err := exec.Command("mdb-schema", *dir+"/"+filename, "mysql").Output()
 	if err != nil {
 
-		log.Fatal("Could not execute the command: ", err)
+		log.Print("Could not execute the command: ", err)
 
 		return err
 
@@ -91,7 +91,7 @@ func schema(filename string, db *sql.DB) error {
 		_, err := db.Exec(query)
 
 		if err != nil {
-			log.Fatalf("Could not execute the query transaction: %v", err)
+			log.Printf("Could not execute the query transaction: %v", err)
 			return err
 
 		}
@@ -100,14 +100,12 @@ func schema(filename string, db *sql.DB) error {
 
 	defer db.Close()
 
-	return err
+	return nil
 
 }
 
 // initSqlDb ...
 func initSqlDb(dbFile string) (*sql.DB, error) {
-
-	// ...
 
 	db, err := sql.Open("sqlite3", dbFile)
 	if err != nil {

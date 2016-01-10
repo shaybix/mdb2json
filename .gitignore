@@ -9,3 +9,9 @@
 /mdb
 
 mdb2json
+
+*.sql
+
+*.db
+
+*.sqlite
