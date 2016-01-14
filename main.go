@@ -8,8 +8,6 @@ import (
 	"log"
 	"os"
 	"strings"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var format = flag.String("f", "json", "Choose either json or sql for format")
@@ -34,13 +32,33 @@ func main() {
 
 		newFile := strings.Split(file, ".")[0]
 
-		newFile = newFile + ".sqlite"
-		f, err := os.Create(newFile)
+		dbFile := newFile + ".sqlite"
+		f, err := os.Create(dbFile)
 
 		defer f.Close()
 
 		if err != nil {
 			log.Fatalf("Could not create file: %v", err)
+		}
+
+		db, err := initDB(dbFile)
+
+		if err != nil {
+			log.Fatalf("could not initialise Sqlite database: %v", err)
+
+		}
+
+		err = schema(dbFile, db)
+
+		if err != nil {
+			log.Printf("Not able to set the schema: %v", err)
+		}
+
+		err = dumpToSQL(dbFile, db)
+
+		if err != nil {
+			log.Fatalf("Could not dump SQL to Database: %v", err)
+
 		}
 
 	}
