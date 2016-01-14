@@ -10,7 +10,7 @@ import (
 )
 
 // ...
-// initDB ..
+// initDB - initialise the database, and pass on a pointer to the instance
 func initDB(dbFile string) (*sql.DB, error) {
 
 	DB, err := sql.Open("sqlite3", dbFile)
@@ -21,7 +21,8 @@ func initDB(dbFile string) (*sql.DB, error) {
 	return DB, nil
 }
 
-// schema exports the mdb-schema in json format
+// schema - pipes the created queries for inserting the schema
+// from mdb-tools into sqlite3 database.
 func schema(filename string, db *sql.DB) error {
 
 	out, err := exec.Command("mdb-schema", *dir+"/"+filename, "sqlite").Output()
@@ -51,6 +52,9 @@ func schema(filename string, db *sql.DB) error {
 
 }
 
+// dumpToSQL - Sets the environment variables for the arabic characters
+// and then pipes the output from mdb tools into sqlite3 for the
+// insert queries to insert the data.
 func dumpToSQL(filename string, db *sql.DB) error {
 
 	err := prepareEnv()
@@ -59,8 +63,6 @@ func dumpToSQL(filename string, db *sql.DB) error {
 		log.Fatal(err)
 		return err
 	}
-
-	// TODO: Dump the data to the Sqlite DB file
 
 	out, err := exec.Command("mdb-tables", "-1", *dir+"/"+filename).Output()
 	if err != nil {
