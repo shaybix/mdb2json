@@ -24,6 +24,7 @@ func initDB(dbFile string) (*sql.DB, error) {
 // schema - pipes the created queries for inserting the schema
 // from mdb-tools into sqlite3 database.
 func schema(filename string, db *sql.DB) error {
+	log.Println(*dir + "/" + filename)
 
 	out, err := exec.Command("mdb-schema", *dir+"/"+filename, "sqlite").Output()
 	if err != nil {
@@ -33,12 +34,11 @@ func schema(filename string, db *sql.DB) error {
 		return err
 
 	}
-
 	queries := strings.Split(string(out), ";")
 
 	for _, query := range queries {
 
-		_, err := db.Exec(query)
+		_, err := db.Exec(query + ";")
 
 		if err != nil {
 			log.Printf("Could not execute the query transaction: %v", err)
@@ -71,7 +71,7 @@ func dumpToSQL(filename string, db *sql.DB) error {
 	}
 
 	tables := strings.Split(string(out), "\n")
-	log.Printf("Starting Data Insertion in: %s", filename)
+	log.Printf("======== Starting Data Insertion in: %s", filename)
 
 	for _, table := range tables {
 
@@ -85,8 +85,15 @@ func dumpToSQL(filename string, db *sql.DB) error {
 
 		queries := strings.Split(string(out), "\n")
 
-		for _, query := range queries {
+		for count, query := range queries {
+			if query == "" {
+				continue
+			}
+
+			log.Printf("Currently on %s and query number %d", table, count)
+
 			_, err := db.Exec(query)
+
 			if err != nil {
 				// Currently throwing unrecognized token error
 				//

@@ -42,19 +42,20 @@ func main() {
 		}
 
 		db, err := initDB(dbFile)
+		defer db.Close()
 
 		if err != nil {
 			log.Fatalf("could not initialise Sqlite database: %v", err)
 
 		}
 
-		err = schema(dbFile, db)
+		err = schema(file, db)
 
 		if err != nil {
 			log.Printf("Not able to set the schema: %v", err)
 		}
 
-		err = dumpToSQL(dbFile, db)
+		err = dumpToSQL(file, db)
 
 		if err != nil {
 			log.Fatalf("Could not dump SQL to Database: %v", err)
